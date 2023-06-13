@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Assignment 1 report</title>
+
+<style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    .column {
+      float: left;
+      width: 25%;
+      padding: 5px;
+    }
+    
+    /* Clearfix (clear floats) */
+    .row::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+    </style>
+
+</head>
+
+<body>
+
+<h1>Assignment 1: Path Planning Report</h1>
+<p>Zhenhua Lu</p>
+
+<h2>Motivation</h2>
+<p> Path planning is a problem to find a sequence of valid configurations that allow robots to move from the start to the destination. It is an essential aspect of robot control and is commonly used in real-world applications such as GPS navigation and robot arm control.
+ </p>
+
+<h2>Problem Statement and Objective</h2>
+<p> In this assignment, our goal is to generate a collision-free path for a robot to move from a starting point to a destination point in a 2D world with obsticles. The robot configuration is described by [x,y] in the 2D world coodinate. The 2D world is displayed in HTML5 canvas and discretized into uniformly distributed graph cells, which are represented as elements of a 2D array. Each graph cell has four connected neighbors in a set distance and could respresent obsticles or empty space depending on the world scene. Robot can only traverse to its neighboring empty cell one at a time.
+</p>
+
+<h2>Search Algorithm Overview</h2>
+<p> Since the 2D world is discretized into cells and each cell could represent every possible robot pose, it is natural to consider each robot pose as a node in a graph data structure and perform graph search algorithms. A graph structure has nodes that are connected by edges. Edges have a  cost for traversal. Each node maintains the distance traveled from the start as a scalar cost and has a parent node that specifies its route to the start node. An example of graph structure is shown in Figure 1 below.
+</p>
+
+<img src="img/graph.jpg" alt="Graph" width="500" height="300">
+
+<p>
+    Figure 1. Graph search structure from 'autorob_02_graph_search' lecture slide page 33
+</p>
+
+<p>
+    To find the short path, the graph is initialized by setting all nodes with infinity distance to the start node, none parent node, and as non-visited. A visit list is used to contain nodes for the algorithm to visit in future iterations. Usually, the graph search algorithm would start by visiting the start node, adding its valid neighbors to the visit list, and updating their node properties. This process will iterate until the algorithm reaches the goal node or there is no more node in the visit list. With the such framework, various search algorithms are implemented to find the shortest collision-free path, including Depth-first search, Breadth-first search, Greedy best-first search, and A*. They are discussed in the following sections.
+</p>
+
+<h2>Graph Search Algorithm Implementation</h2>
+
+<h3>Depth-first search</h3>
+
+<p>
+    Depth-first search (DFS) uses a stack data structure for the visit list. A stack is a “last in, first out” structure with two operations. One is push(), which adds an element to the top of the stack. The other one is pop(), which removes an element from the top of the stack. It means DFS would always traverse to the direction that is the most recently added to the visit list in priority. The sequence of directions adding to the visit list could be arbitrary and, in this case, it is set to [right left down up]. So we can see, from the executing results, DFS always visits the upper neighbor first until the upper neighbor is occupied or visited since it is the last one added to the list. The resulting path would tend to go up, go left, go down, and lastly go right due to the walls and sequence of visited nodes. Since there are nodes surrounding the start not being visited and many nodes had not been updated with the shortest distance to the start before DFS reaches the goal, the resulting path is not optimal.
+</p>
+
+<div class="row">
+    <div class="column">
+      <img src="img/DFS2_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/DFS2_2.jpg" alt="Forest" style="width:100%">
+    </div>
+    <div class="column">
+        <img src="img/DFS3_1.jpg" alt="Snow" style="width:100%">
+      </div>
+      <div class="column">
+        <img src="img/DFS3_2.jpg" alt="Forest" style="width:100%">
+      </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+        <img src="img/DFS4_1.jpg" alt="Snow" style="width:100%">
+      </div>
+    <div class="column">
+        <img src="img/DFS4_2.jpg" alt="Forest" style="width:100%">
+      </div>
+     <div class="column">
+      <img src="img/DFS1_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/DFS1_2.jpg" alt="Forest" style="width:100%">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <img src="img/DFS5_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/DFS5_2.jpg" alt="Forest" style="width:100%">
+    </div>
+  </div>
+
+  <p>
+    Figure 2. Depth-first search results for 5 planning scenes["empty.js", "misc.js", "narrow1.js", "narrow2.js", 
+    and "three_sections.js"] for two start and goal configurations 
+</p>
+
+
+<h3>Breadth-first search</h3>
+<p>
+    Different from the DFS, Breadth-first search (BFS) uses a queue data structure for the visit list. A queue is a “first in, first out” structure with two operations. One is enqueue(), which adds an element to the back of the stack. And the other one is dequeue(), which removes an element from the front of the stack. It means BFS would always traverse to the direction that is the least recently added to the visit list in priority. The sequence of directions adding to the visit list would not matter too much, since BFS would expand the visited region in all four directions. When the visited region reaches the goal, BFS would give us the optimal path since all the nodes surrounding the start are visited and their distance to the start is updated to the lowest. 
+</p>
+
+<div class="row">
+    <div class="column">
+      <img src="img/BFS1_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/BFS1_2.jpg" alt="Forest" style="width:100%">
+    </div>
+    <div class="column">
+        <img src="img/BFS2_1.jpg" alt="Snow" style="width:100%">
+      </div>
+      <div class="column">
+        <img src="img/BFS2_2.jpg" alt="Forest" style="width:100%">
+      </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <img src="img/BFS3_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/BFS3_2.jpg" alt="Forest" style="width:100%">
+    </div>
+    <div class="column">
+        <img src="img/BFS4_1.jpg" alt="Snow" style="width:100%">
+      </div>
+      <div class="column">
+        <img src="img/BFS4_2.jpg" alt="Forest" style="width:100%">
+      </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <img src="img/BFS5_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/BFS5_2.jpg" alt="Forest" style="width:100%">
+    </div>
+  </div>
+
+  <p>
+    Figure 3. Breadth-first search results for 5 planning scenes["empty.js", "misc.js", "narrow1.js", "narrow2.js", 
+    and "three_sections.js"] for two start and goal configurations 
+</p>
+
+<h3>Greedy best-first search</h3>
+
+<p>
+    Different from the previous two algorithms, Greedy best-first search (GBFS) uses a priority queue data structure for the visit list. More specifically, a min binary heap tree structure is implemented. Binary heaps allow nodes to have up to 2 children. It is implemented as an array, where the heap element at index i has children at location 2i+1 and 2i+2 and a parent at floor((i-1)/2). It follows the min heap property: the value of the parent node must always be less than or equal to the value of the child node. The value of the min heap node in GBFS is specified as the Euclidian distance from the corresponding node to the goal point in 2D world. It means GBFS would always traverse the node closest to the goal in priority. So we can see, from the executing results, GBFS would traverse straight to the goal. When there is no obstacle between the start and the goal, it gives us the shortest path with few amount of iterations. But when there are obstacles between the start and goal, like in the first configuration in scene 'misc.js' (third one in the first row), it needs to trace back to the opening on the top. In this case, the resulting path is not optimal.
+</p>
+
+<div class="row">
+    <div class="column">
+      <img src="img/GBFS1_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/GBFS1_2.jpg" alt="Forest" style="width:100%">
+    </div>
+    <div class="column">
+        <img src="img/GBFS2_1.jpg" alt="Snow" style="width:100%">
+      </div>
+      <div class="column">
+        <img src="img/GBFS2_2.jpg" alt="Forest" style="width:100%">
+      </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <img src="img/GBFS3_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/GBFS3_2.jpg" alt="Forest" style="width:100%">
+    </div>
+    <div class="column">
+        <img src="img/GBFS4_1.jpg" alt="Snow" style="width:100%">
+      </div>
+      <div class="column">
+        <img src="img/GBFS4_2.jpg" alt="Forest" style="width:100%">
+      </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <img src="img/GBFS5_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/GBFS5_2.jpg" alt="Forest" style="width:100%">
+    </div>
+  </div>
+
+  <p>
+    Figure 4. Greedy best-first search results for 5 planning scenes["empty.js", "misc.js", "narrow1.js", "narrow2.js", 
+    and "three_sections.js"] for two start and goal configurations 
+</p>
+
+<h3>A*</h3>
+
+<p>
+    A* uses the same priority queue data structure as the GBFS does. Instead of only using the Euclidian distance from the corresponding node to the goal point, A* use the sum of Euclidian distance to the goal point and the path distance to the start point. It means A* would visit the nodes around the start first and lean toward the goal gradually. It could give us an optimal path like BFS, while using fewer iterations. It is more advantageous among these four graph search algorithms.
+</p>
+
+<div class="row">
+    <div class="column">
+      <img src="img/A1_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/A1_2.jpg" alt="Forest" style="width:100%">
+    </div>
+    <div class="column">
+        <img src="img/A2_1.jpg" alt="Snow" style="width:100%">
+      </div>
+      <div class="column">
+        <img src="img/A2_2.jpg" alt="Forest" style="width:100%">
+      </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <img src="img/A3_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/A3_2.jpg" alt="Forest" style="width:100%">
+    </div>
+    <div class="column">
+        <img src="img/A4_1.jpg" alt="Snow" style="width:100%">
+      </div>
+      <div class="column">
+        <img src="img/A4_2.jpg" alt="Forest" style="width:100%">
+      </div>
+  </div>
+
+  <div class="row">
+    <div class="column">
+      <img src="img/A5_1.jpg" alt="Snow" style="width:100%">
+    </div>
+    <div class="column">
+      <img src="img/A5_2.jpg" alt="Forest" style="width:100%">
+    </div>
+  </div>
+
+  <p>
+    Figure 5. A* search results for 5 planning scenes["empty.js", "misc.js", "narrow1.js", "narrow2.js", 
+    and "three_sections.js"] for two start and goal configurations 
+</p>
+
+</body>
+
+</html>
