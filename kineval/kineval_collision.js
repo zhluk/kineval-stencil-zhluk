@@ -23,14 +23,15 @@ kineval.robotIsCollision = function robot_iscollision() {
     // test whether geometry of current configuration of robot is in collision with planning world 
 
     // form configuration from base location and joint angles
-    var q_robot_config = [
-        robot.origin.xyz[0],
-        robot.origin.xyz[1],
-        robot.origin.xyz[2],
-        robot.origin.rpy[0],
-        robot.origin.rpy[1],
-        robot.origin.rpy[2]
-    ];
+
+        q_robot_config = [
+            robot.origin.xyz[0],
+            robot.origin.xyz[1],
+            robot.origin.xyz[2],
+            robot.origin.rpy[0],
+            robot.origin.rpy[1],
+            robot.origin.rpy[2]
+        ];
 
     q_names = {};  // store mapping between joint names and q DOFs
 
@@ -50,8 +51,14 @@ kineval.poseIsCollision = function robot_collision_test(q) {
     // perform collision test of robot geometry against planning world 
 
     // test base origin (not extents) against world boundary extents
-    if ((q[0]<robot_boundary[0][0])||(q[0]>robot_boundary[1][0])||(q[2]<robot_boundary[0][2])||(q[2]>robot_boundary[1][2]))
+    if (robot.links_geom_imported){
+        if ((-q[1]<robot_boundary[0][0])||(-q[1]>robot_boundary[1][0])||(q[0]<robot_boundary[0][2])||(q[0]>robot_boundary[1][2]))
         return robot.base;
+    }else {
+        if ((q[0]<robot_boundary[0][0])||(q[0]>robot_boundary[1][0])||(q[2]<robot_boundary[0][2])||(q[2]>robot_boundary[1][2]))
+        return robot.base;
+    }
+
 
     // traverse robot kinematics to test each body for collision
     // STENCIL: implement forward kinematics for collision detection
@@ -61,14 +68,36 @@ kineval.poseIsCollision = function robot_collision_test(q) {
 }
 
 function robot_collision_forward_kinematics(q){
+
     var mstack = [generate_identity()];
-    var R_w_b = rotation_matrix([q[3],q[4],q[5]]);
-    var tx = q[0];
-    var ty = q[1];
-    var tz = q[2];
-    var D_w_b = generate_translation_matrix(tx,ty,tz);
-    var mstack_top = matrix_multiply(mstack[mstack.length-1],matrix_multiply(D_w_b,R_w_b));
-    mstack.push(mstack_top);
+
+    if (robot.links_geom_imported){
+        var R_w_b = rotation_matrix([q[3],q[4],q[5]]);
+        var tx = q[0];
+        var ty = -q[1];
+        var tz = q[2];
+        var D_w_b = generate_translation_matrix(tx,ty,tz);
+
+        var R_convert = [
+            [0,1,0,0],
+            [0,0,1,0],
+            [1,0,0,0],
+            [0,0,0,1]];
+
+        var mstack_top = matrix_multiply(mstack[mstack.length-1],matrix_multiply(R_convert,matrix_multiply(D_w_b,R_w_b)));
+       
+        mstack.push(mstack_top);
+
+    } else{
+        var R_w_b = rotation_matrix([q[3],q[4],q[5]]);
+        var tx = q[0];
+        var ty = q[1];
+        var tz = q[2];
+        var D_w_b = generate_translation_matrix(tx,ty,tz);
+        var mstack_top = matrix_multiply(mstack[mstack.length-1],matrix_multiply(D_w_b,R_w_b));
+        mstack.push(mstack_top);
+    }
+
 
     var collsion_link = traverse_collision_forward_kinematics_link(robot.links[robot.base],mstack_top,q);
     if (collsion_link!= false){
